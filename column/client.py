@@ -1,17 +1,20 @@
 from typing import Any, Literal, Union
 
 from httpx import AsyncClient, Client, Response
+from typing_extensions import Unpack
 
 from column.exceptions import ColumnClientException, ColumnErrorResponse
 from column.models.business_entity import BusinessEntity, BusinessEntityDict
+from column.models.document import DocumentSubmitDict
 from column.models.person_entity import PersonEntity, PersonEntityDict
 
 from .constants import COLUMN_API_ADDRESS
+from .types import ColumnEnv
 
 
 class ColumnClient:
     _api_key: str
-    _env: Literal["live", "test"]
+    _env: ColumnEnv
     _client: Client
     _async_client: AsyncClient
 
@@ -60,40 +63,46 @@ class ColumnClient:
         data = self._handle_response(response)
         return PersonEntity.model_validate(data)
 
-    def create_person(self, data: PersonEntityDict) -> PersonEntity:
-        response = self._client.post("/entities/person", json=data)
+    def create_person(self, **kwargs: Unpack[PersonEntityDict]) -> PersonEntity:
+        response = self._client.post("/entities/person", json=kwargs)
         return self._mutate_person(response)
 
-    async def acreate_person(self, data: PersonEntityDict) -> PersonEntity:
-        response = await self._async_client.post("/entities/person", json=data)
+    async def acreate_person(self, **kwargs: Unpack[PersonEntityDict]) -> PersonEntity:
+        response = await self._async_client.post("/entities/person", json=kwargs)
         return self._mutate_person(response)
 
-    def update_person(self, entity_id: str, data: PersonEntityDict) -> PersonEntity:
-        response = self._client.put(f"/entities/person/{entity_id}", json=data)
+    def update_person(self, entity_id: str, **kwargs: Unpack[PersonEntityDict]) -> PersonEntity:
+        response = self._client.put(f"/entities/person/{entity_id}", json=kwargs)
         return self._mutate_person(response)
 
-    async def aupdate_person(self, entity_id: str, data: PersonEntityDict) -> PersonEntity:
-        response = await self._async_client.put(f"/entities/person/{entity_id}", json=data)
+    async def aupdate_person(
+        self, entity_id: str, **kwargs: Unpack[PersonEntityDict]
+    ) -> PersonEntity:
+        response = await self._async_client.put(f"/entities/person/{entity_id}", json=kwargs)
         return self._mutate_person(response)
 
     def _mutate_business(self, response: Response) -> BusinessEntity:
         data = self._handle_response(response)
         return BusinessEntity.model_validate(data)
 
-    def create_business(self, data: BusinessEntityDict) -> BusinessEntity:
-        response = self._client.post("/entities/business", json=data)
+    def create_business(self, **kwargs: Unpack[BusinessEntityDict]) -> BusinessEntity:
+        response = self._client.post("/entities/business", json=kwargs)
         return self._mutate_business(response)
 
-    async def acreate_business(self, data: BusinessEntityDict) -> BusinessEntity:
-        response = await self._async_client.post("/entities/business", json=data)
+    async def acreate_business(self, **kwargs: Unpack[BusinessEntityDict]) -> BusinessEntity:
+        response = await self._async_client.post("/entities/business", json=kwargs)
         return self._mutate_business(response)
 
-    def update_business(self, entity_id: str, data: BusinessEntityDict) -> BusinessEntity:
-        response = self._client.put(f"/entities/business/{entity_id}", json=data)
+    def update_business(
+        self, entity_id: str, **kwargs: Unpack[BusinessEntityDict]
+    ) -> BusinessEntity:
+        response = self._client.put(f"/entities/business/{entity_id}", json=kwargs)
         return self._mutate_business(response)
 
-    async def aupdate_business(self, entity_id: str, data: BusinessEntityDict) -> BusinessEntity:
-        response = await self._async_client.put(f"/entities/business/{entity_id}", json=data)
+    async def aupdate_business(
+        self, entity_id: str, **kwargs: Unpack[BusinessEntityDict]
+    ) -> BusinessEntity:
+        response = await self._async_client.put(f"/entities/business/{entity_id}", json=kwargs)
         return self._mutate_business(response)
 
     def delete_entity(self, entity_id: str) -> None:
@@ -103,3 +112,15 @@ class ColumnClient:
     async def adelete_entity(self, entity_id: str) -> None:
         response = await self._async_client.delete(f"/entities/{entity_id}")
         self._handle_response(response)
+
+    def submit_document(
+        self, entity_id: str, **kwargs: Unpack[DocumentSubmitDict]
+    ) -> Union[PersonEntity, BusinessEntity]:
+        response = self._client.post(f"/entities/{entity_id}/documents", json=kwargs)
+        return self._get_entity(response)
+
+    async def asubmit_document(
+        self, entity_id: str, **kwargs: Unpack[DocumentSubmitDict]
+    ) -> Union[PersonEntity, BusinessEntity]:
+        response = await self._async_client.post(f"/entities/{entity_id}/documents", json=kwargs)
+        return self._get_entity(response)

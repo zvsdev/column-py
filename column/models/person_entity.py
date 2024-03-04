@@ -1,4 +1,4 @@
-from typing import Optional, TypedDict
+from typing import Literal, Optional, TypedDict
 
 from pydantic import BaseModel
 
@@ -43,6 +43,7 @@ class PersonEntity(BaseModel):
     verification_status: str
     verification_tags: str
     review_reasons: list[str]
+    type: Literal["PERSON"]
 
 
 class PersonEntityDict(TypedDict):

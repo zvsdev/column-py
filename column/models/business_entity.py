@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from pydantic import BaseModel
 
@@ -106,7 +106,7 @@ class BusinessEntity(BaseModel):
     documents: list[Document]
     business_details: BusinessDetails
     review_reasons: list[str]
-    type: str
+    type: Literal["BUSINESS"]
     verification_status: list[str]
     verification_tags: str
 
