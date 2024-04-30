@@ -5,9 +5,11 @@ An unofficial python SDK for the Column API
 ## TODO
 
 - [x] Entities
-- [ ] Bank Accounts
+- [x] Bank Accounts
 - [ ] Book Transfers
 - [ ] ACH Transfers
 - [ ] Wires
 - [ ] International Wires
 - [ ] Cheques
+- [x] Account Numbers
+- [ ] Idempotency Headers
