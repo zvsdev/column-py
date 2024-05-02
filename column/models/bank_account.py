@@ -4,6 +4,8 @@ from typing import List, Literal, Optional, TypedDict
 from pydantic import BaseModel
 from typing_extensions import NotRequired
 
+from column.models.common import CreatedParams
+
 BankAccountType = Literal["CHECKING", "OVERDRAFT_RESERVE", "PROGRAM_RESERVE"]
 
 
@@ -39,13 +41,6 @@ class BankAccount(BaseModel):
 class BankAccountList(BaseModel):
     has_more: bool
     bank_accounts: List[BankAccount]
-
-
-class CreatedParams(TypedDict):
-    gt: NotRequired[datetime]
-    lt: NotRequired[datetime]
-    gte: NotRequired[datetime]
-    lte: NotRequired[datetime]
 
 
 class BankAccountListParams(TypedDict):

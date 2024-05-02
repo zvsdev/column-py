@@ -1,4 +1,4 @@
-from typing import Optional, TypedDict
+from typing import NotRequired, Optional, TypedDict
 
 from pydantic import BaseModel
 
@@ -39,7 +39,7 @@ class AddressDict(TypedDict):
 
     city: str
     country_code: str
-    postal_code: str
-    state: Optional[str]  # Optional if country is not US
+    postal_code: NotRequired[str]
+    state: NotRequired[str]  # Optional if country is not US
     line_1: str
-    line_2: Optional[str]  # Optional field
+    line_2: NotRequired[str]  # Optional field
