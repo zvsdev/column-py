@@ -7,7 +7,7 @@ An unofficial python SDK for the Column API
 - [x] Entities
 - [x] Bank Accounts
 - [x] Counterparty
-- [ ] Book Transfers
+- [x] Book Transfers
 - [ ] ACH Transfers
 - [ ] Wires
 - [ ] International Wires

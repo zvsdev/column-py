@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Literal, Optional, Type, TypeVar, Union
 
 from httpx import AsyncClient, Client, Response
@@ -27,6 +28,13 @@ from column.models.counterparty import (
 )
 from column.models.document import DocumentSubmitDict
 from column.models.person_entity import PersonEntity, PersonEntityDict
+from column.models.transfer import (
+    BookTransfer,
+    BookTransferList,
+    CreateBookTransferBody,
+    TransferDetailsDict,
+    TransferStatus,
+)
 
 from .constants import COLUMN_API_ADDRESS
 from .types import ColumnEnv
@@ -360,5 +368,146 @@ class ColumnClient:
         response = await self._async_client.get(f"/iban/{iban}")
         return self._parse_response(response, IBANValidationObject)
 
+    def create_book_transfer(
+        self,
+        amount: int,
+        currency_code: str,
+        description: Optional[str] = None,
+        sender_bank_account_id: Optional[str] = None,
+        sender_account_number_id: Optional[str] = None,
+        receiver_bank_account_id: Optional[str] = None,
+        receiver_account_number_id: Optional[str] = None,
+        allow_overdraft: Optional[bool] = None,
+        hold: Optional[bool] = None,
+        details: Optional[TransferDetailsDict] = None,
+    ) -> BookTransfer:
+        body = CreateBookTransferBody(
+            amount=amount,
+            currency_code=currency_code,
+            description=description,
+            sender_bank_account_id=sender_bank_account_id,
+            sender_account_number_id=sender_account_number_id,
+            receiver_bank_account_id=receiver_bank_account_id,
+            receiver_account_number_id=receiver_account_number_id,
+            allow_overdraft=allow_overdraft,
+            hold=hold,
+            details=details,
+        )
+        response = self._client.post("/transfers/book", json=body.model_dump(exclude_none=True))
+        return self._parse_response(response, BookTransfer)
+
+    async def acreate_book_transfer(
+        self,
+        amount: int,
+        currency_code: str,
+        description: Optional[str] = None,
+        sender_bank_account_id: Optional[str] = None,
+        sender_account_number_id: Optional[str] = None,
+        receiver_bank_account_id: Optional[str] = None,
+        receiver_account_number_id: Optional[str] = None,
+        allow_overdraft: Optional[bool] = None,
+        hold: Optional[bool] = None,
+        details: Optional[TransferDetailsDict] = None,
+    ) -> BookTransfer:
+        body = CreateBookTransferBody(
+            amount=amount,
+            currency_code=currency_code,
+            description=description,
+            sender_bank_account_id=sender_bank_account_id,
+            sender_account_number_id=sender_account_number_id,
+            receiver_bank_account_id=receiver_bank_account_id,
+            receiver_account_number_id=receiver_account_number_id,
+            allow_overdraft=allow_overdraft,
+            hold=hold,
+            details=details,
+        )
+        response = await self._async_client.post(
+            "/transfers/book", json=body.model_dump(exclude_none=True)
+        )
+        return self._parse_response(response, BookTransfer)
+
+    def list_book_transfers(
+        self,
+        limit: Optional[int] = None,
+        starting_after: Optional[str] = None,
+        ending_before: Optional[str] = None,
+        created_gt: Optional[datetime] = None,
+        created_lt: Optional[datetime] = None,
+        created_gte: Optional[datetime] = None,
+        created_lte: Optional[datetime] = None,
+        sender_bank_account_id: Optional[str] = None,
+        receiver_bank_account_id: Optional[str] = None,
+        status: Optional[TransferStatus] = None,
+    ) -> BookTransferList:
+        params = {k: v for k, v in locals().items() if v is not None and "created" not in k}
+        if created_gt:
+            params["created.gt"] = created_gt.isoformat()
+        if created_lt:
+            params["created.lt"] = created_lt.isoformat()
+        if created_gte:
+            params["created.gte"] = created_gte.isoformat()
+        if created_lte:
+            params["created.lte"] = created_lte.isoformat()
+        response = self._client.get("/transfers/book", params=params)
+        return self._parse_response(response, BookTransferList)
+
+    async def alist_book_transfers(
+        self,
+        limit: Optional[int] = None,
+        starting_after: Optional[str] = None,
+        ending_before: Optional[str] = None,
+        created_gt: Optional[datetime] = None,
+        created_lt: Optional[datetime] = None,
+        created_gte: Optional[datetime] = None,
+        created_lte: Optional[datetime] = None,
+        sender_bank_account_id: Optional[str] = None,
+        receiver_bank_account_id: Optional[str] = None,
+        status: Optional[TransferStatus] = None,
+    ) -> BookTransferList:
+        params = {k: v for k, v in locals().items() if v is not None and "created" not in k}
+        if created_gt:
+            params["created.gt"] = created_gt.isoformat()
+        if created_lt:
+            params["created.lt"] = created_lt.isoformat()
+        if created_gte:
+            params["created.gte"] = created_gte.isoformat()
+        if created_lte:
+            params["created.lte"] = created_lte.isoformat()
+        response = await self._async_client.get("/transfers/book", params=params)
+        return self._parse_response(response, BookTransferList)
+
+    def get_book_transfer(self, book_transfer_id: str) -> BookTransfer:
+        response = self._client.get(f"/transfers/book/{book_transfer_id}")
+        return self._parse_response(response, BookTransfer)
+
+    async def aget_book_transfer(self, book_transfer_id: str) -> BookTransfer:
+        response = await self._async_client.get(f"/transfers/book/{book_transfer_id}")
+        return self._parse_response(response, BookTransfer)
+
+    def cancel_book_transfer(self, book_transfer_id: str) -> None:
+        """Cancel a book transfer hold by its ID. Transfer must be in a HOLD state."""
+        response = self._client.post(f"/transfers/book/{book_transfer_id}/cancel")
+        self._handle_response(response)
+
+    async def acancel_book_transfer(self, book_transfer_id: str) -> None:
+        """Cancel a book transfer hold by its ID. Transfer must be in a HOLD state."""
+        response = await self._async_client.post(f"/transfers/book/{book_transfer_id}/cancel")
+        self._handle_response(response)
+
+    def clear_book_transfer(self, book_transfer_id: str) -> None:
+        """Clear a book transfer hold by its ID. Transfer must be in a HOLD state.
+        If the amount is specified, then that amount will be cleared, regardless of the amount of the hold.
+        If no amount is specified, then the entire hold will be cleared."""
+        response = self._client.post(f"/transfers/book/{book_transfer_id}/clear")
+        self._handle_response(response)
+
+    async def aclear_book_transfer(self, book_transfer_id: str) -> None:
+        """Clear a book transfer hold by its ID. Transfer must be in a HOLD state.
+        If the amount is specified, then that amount will be cleared, regardless of the amount of the hold.
+        If no amount is specified, then the entire hold will be cleared."""
+        response = await self._async_client.post(f"/transfers/book/{book_transfer_id}/clear")
+        self._handle_response(response)
+
 
 # TODO: Idempotency headers
+# TODO: Currency Codes, ISO 4217
